@@ -51,6 +51,8 @@ for (let i = 0; i < numPeople; i++) {
     angle, // Current angle around the campfire
     speed: 1, // Speed of movement
     avoiding: false, // Whether they are reacting to smoke
+    vx: 0, // Horizontal velocity
+    vy: 0, // Vertical velocity
   });
 }
 
@@ -81,35 +83,48 @@ function checkSmokeProximity() {
 }
 
 function movePeople() {
+  const damping = 0.9; // Reduce velocity slightly each frame for smoother movement
+
   for (const person of people) {
     if (person.avoiding) {
       // Move outward from the campfire (away from smoke) and rotate along the circle
       let dx = person.x - centerX;
       let dy = person.y - centerY;
 
-      // Calculate the angle to move along the circle
       const angleToMouse = Math.atan2(dy, dx);
-      const targetAngle = angleToMouse + Math.sign(mouseX - centerX) * 0.1; // Rotate away from smoke
+      const targetAngle = angleToMouse + Math.sign(mouseX - centerX) * 0.1;
 
-      // Update the person's position
-      const radius = Math.hypot(dx, dy); // Distance from the center
-      person.x = centerX + Math.cos(targetAngle) * (radius + person.speed);
-      person.y = centerY + Math.sin(targetAngle) * (radius + person.speed);
+      // Calculate movement based on angle
+      const radius = Math.hypot(dx, dy);
+      const targetX = centerX + Math.cos(targetAngle) * (radius + person.speed);
+      const targetY = centerY + Math.sin(targetAngle) * (radius + person.speed);
+
+      // Adjust velocity toward the target position
+      person.vx += (targetX - person.x) * 0.05;
+      person.vy += (targetY - person.y) * 0.05;
     } else {
       // Smoothly return to the original circular position
       const originalX = centerX + Math.cos(person.angle) * circleRadius;
       const originalY = centerY + Math.sin(person.angle) * circleRadius;
 
-      // Interpolate the position
-      person.x += (originalX - person.x) * 0.05; // Gradual return
-      person.y += (originalY - person.y) * 0.05; // Gradual return
+      // Adjust velocity toward the original position
+      person.vx += (originalX - person.x) * 0.05;
+      person.vy += (originalY - person.y) * 0.05;
     }
+
+    // Apply velocities to update positions
+    person.x += person.vx;
+    person.y += person.vy;
+
+    // Apply damping to smooth movement
+    person.vx *= damping;
+    person.vy *= damping;
   }
 }
 
 function avoidCollisions() {
   const collisionThreshold = 50; // Minimum distance between people
-  const separationForce = 0.5; // How strongly people move apart
+  const separationForce = 0.1; // Strength of separation force
 
   for (let i = 0; i < people.length; i++) {
     for (let j = i + 1; j < people.length; j++) {
@@ -126,11 +141,11 @@ function avoidCollisions() {
         const separationX = (dx / dist) * overlap * separationForce;
         const separationY = (dy / dist) * overlap * separationForce;
 
-        // Move the people apart
-        personA.x -= separationX / 2;
-        personA.y -= separationY / 2;
-        personB.x += separationX / 2;
-        personB.y += separationY / 2;
+        // Adjust velocities instead of positions
+        personA.vx -= separationX / 2;
+        personA.vy -= separationY / 2;
+        personB.vx += separationX / 2;
+        personB.vy += separationY / 2;
       }
     }
   }
