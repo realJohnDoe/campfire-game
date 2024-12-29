@@ -204,30 +204,46 @@ function emitSmokeParticles() {
   }
 }
 
+// Function to create a new smoke particle with random characteristics
 function createSmokeParticle() {
   const angle = Math.atan2(mouseY - centerY, mouseX - centerX); // Direction to mouse
-  const speed = Math.random() * 1.5 + 0.5; // Random speed
 
+  // Randomize speed within a range (this makes the particles move at different speeds)
+  const speed = Math.random() * 1.5 + 0.5;
+
+  // Introduce a slight variation to the direction (deviates up to 30 degrees)
+  const directionVariance = (Math.random() - 0.5) * 1.0; // Small random variance
+  const variedAngle = angle + directionVariance;
+
+  // Add the smoke particle to the array with random size, opacity, and speed
   smokeParticles.push({
     x: centerX,
     y: centerY,
-    vx: Math.cos(angle) * speed, // Horizontal velocity
-    vy: Math.sin(angle) * speed, // Vertical velocity
-    size: Math.random() * 8 + 4, // Random size
-    opacity: 0.5, // Full opacity
+    vx: Math.cos(variedAngle) * speed, // Randomized horizontal velocity
+    vy: Math.sin(variedAngle) * speed, // Randomized vertical velocity
+    size: Math.random() * 8 + 4, // Random initial size between 4 and 12
+    opacity: 0.5, // Full opacity at the start
+    opacityDecay: Math.random() * 0.005 + 0.002, // Random decay rate for opacity
+    growthRate: Math.random() * 0.5 + 0.5, // Random growth rate for the particle size
   });
 }
 
+// Function to update smoke particles (random size and opacity decay)
 function updateSmokeParticles() {
   for (let i = smokeParticles.length - 1; i >= 0; i--) {
     const p = smokeParticles[i];
 
-    p.x += p.vx; // Move particle horizontally
-    p.y += p.vy; // Move particle vertically
-    p.size += 0.8; // Gradually increase size
-    p.opacity -= 0.005; // Gradually fade out
+    // Apply velocity to move the particle
+    p.x += p.vx;
+    p.y += p.vy;
 
-    // Remove particle if it's too faint
+    // Gradually increase size at a random rate
+    p.size += p.growthRate;
+
+    // Gradually fade out the opacity at a random rate
+    p.opacity -= p.opacityDecay;
+
+    // Remove particle if it's too faint (opacity becomes too low)
     if (p.opacity <= 0) {
       smokeParticles.splice(i, 1);
     }
