@@ -61,13 +61,13 @@ function updateSmokeParticles() {
   for (let i = smokeParticles.length - 1; i >= 0; i--) {
     const p = smokeParticles[i];
 
-    p.x += p.vx;
-    p.y += p.vy;
-    p.size *= 0.98; // Gradually shrink
-    p.opacity -= 0.01; // Gradually fade
+    p.x += p.vx; // Move particle horizontally
+    p.y += p.vy; // Move particle vertically
+    p.size += 0.2; // Gradually increase size
+    p.opacity -= 0.01; // Gradually fade out
 
-    // Remove particle if it's too small or invisible
-    if (p.size < 0.5 || p.opacity <= 0) {
+    // Remove particle if it's too faint
+    if (p.opacity <= 0) {
       smokeParticles.splice(i, 1);
     }
   }
