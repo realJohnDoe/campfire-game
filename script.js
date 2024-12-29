@@ -103,13 +103,14 @@ function movePeople() {
       person.vx += (targetX - person.x) * 0.05;
       person.vy += (targetY - person.y) * 0.05;
     } else {
-      // Smoothly return to the original circular position
-      const originalX = centerX + Math.cos(person.angle) * circleRadius;
-      const originalY = centerY + Math.sin(person.angle) * circleRadius;
+      // Calculate position on the circle (return to the circle)
+      const angle = Math.atan2(person.y - centerY, person.x - centerX);
+      const targetX = centerX + Math.cos(angle) * circleRadius;
+      const targetY = centerY + Math.sin(angle) * circleRadius;
 
-      // Adjust velocity toward the original position
-      person.vx += (originalX - person.x) * 0.05;
-      person.vy += (originalY - person.y) * 0.05;
+      // Adjust velocity toward the circle position
+      person.vx += (targetX - person.x) * 0.05;
+      person.vy += (targetY - person.y) * 0.05;
     }
 
     // Apply velocities to update positions
