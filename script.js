@@ -305,7 +305,7 @@ function createSmokeParticle() {
   const angle = Math.atan2(mouseY - centerY, mouseX - centerX); // Direction to mouse
 
   // Randomize speed within a range (this makes the particles move at different speeds)
-  const speed = Math.random() * 1.5 + 0.5;
+  const speed = Math.random() * 1.5 + 0.2;
 
   // Introduce a slight variation to the direction (deviates up to 30 degrees)
   const directionVariance = (Math.random() - 0.5) * 1.0; // Small random variance
