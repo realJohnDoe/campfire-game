@@ -47,7 +47,7 @@ for (let i = 0; i < numPeople; i++) {
   people.push({
     x,
     y,
-    radius: 10, // Size of the person
+    radius: 30, // Size of the person
     angle, // Current angle around the campfire
     speed: 1, // Speed of movement
     avoiding: false, // Whether they are reacting to smoke
@@ -58,7 +58,7 @@ function drawPeople() {
   for (const person of people) {
     ctx.beginPath();
     ctx.arc(person.x, person.y, person.radius, 0, Math.PI * 2);
-    ctx.fillStyle = person.avoiding ? "red" : "white"; // Change color if avoiding
+    ctx.fillStyle = "white";
     ctx.fill();
   }
 }
@@ -119,7 +119,7 @@ function createSmokeParticle() {
     vx: Math.cos(angle) * speed, // Horizontal velocity
     vy: Math.sin(angle) * speed, // Vertical velocity
     size: Math.random() * 8 + 4, // Random size
-    opacity: 1, // Full opacity
+    opacity: 0.5, // Full opacity
   });
 }
 
@@ -129,8 +129,8 @@ function updateSmokeParticles() {
 
     p.x += p.vx; // Move particle horizontally
     p.y += p.vy; // Move particle vertically
-    p.size += 0.2; // Gradually increase size
-    p.opacity -= 0.01; // Gradually fade out
+    p.size += 0.8; // Gradually increase size
+    p.opacity -= 0.005; // Gradually fade out
 
     // Remove particle if it's too faint
     if (p.opacity <= 0) {
