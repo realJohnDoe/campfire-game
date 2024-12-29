@@ -39,10 +39,26 @@ const people = [];
 const numPeople = 10; // Number of people
 const circleRadius = 150; // Distance from campfire
 
+// Function to generate a random color
+function getRandomColor() {
+  const letters = "0123456789ABCDEF";
+  let color = "#";
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
+// Modify the people initialization
 for (let i = 0; i < numPeople; i++) {
   const angle = (i / numPeople) * Math.PI * 2; // Angle in the circle
   const x = centerX + Math.cos(angle) * circleRadius;
   const y = centerY + Math.sin(angle) * circleRadius;
+
+  // Generate and store colors for each person
+  const hatColor = getRandomColor();
+  const scarfColor = getRandomColor();
+  const gloveColor = getRandomColor();
 
   people.push({
     x,
@@ -53,16 +69,96 @@ for (let i = 0; i < numPeople; i++) {
     avoiding: false, // Whether they are reacting to smoke
     vx: 0, // Horizontal velocity
     vy: 0, // Vertical velocity
+    hatColor, // Store hat color
+    scarfColor, // Store scarf color
+    gloveColor, // Store glove color
   });
 }
 
+// Draw each person with random accessories
 function drawPeople() {
   for (const person of people) {
+    // Draw the body (person's head)
     ctx.beginPath();
     ctx.arc(person.x, person.y, person.radius, 0, Math.PI * 2);
-    ctx.fillStyle = "white";
+    ctx.fillStyle = "white"; // Body color (could be another random color too)
     ctx.fill();
+    ctx.stroke(); // Optional: add a border
+
+    // Draw the winter accessories: hat, scarf, gloves
+    drawWinterHat(person);
+    drawScarf(person);
+    drawGloves(person);
   }
+}
+
+// Draw a random winter hat
+function drawWinterHat(person) {
+  const hatHeight = 10;
+
+  // Draw the hat as a small arc using the stored color
+  ctx.beginPath();
+  ctx.arc(
+    person.x,
+    person.y - person.radius - hatHeight / 2,
+    person.radius / 2,
+    Math.PI,
+    0
+  );
+  ctx.lineTo(
+    person.x - person.radius / 2,
+    person.y - person.radius - hatHeight / 2
+  );
+  ctx.lineTo(
+    person.x + person.radius / 2,
+    person.y - person.radius - hatHeight / 2
+  );
+  ctx.closePath();
+  ctx.fillStyle = person.hatColor; // Use the stored hat color
+  ctx.fill();
+}
+
+// Draw a random scarf
+function drawScarf(person) {
+  // Draw the scarf using the stored color
+  ctx.beginPath();
+  ctx.rect(
+    person.x - person.radius * 0.8,
+    person.y + person.radius * 0.1,
+    person.radius * 1.6,
+    6
+  ); // Scarf width & height
+  ctx.fillStyle = person.scarfColor; // Use the stored scarf color
+  ctx.fill();
+}
+
+// Draw gloves on the left and right sides
+function drawGloves(person) {
+  const gloveSize = 5;
+
+  // Draw left glove using the stored glove color
+  ctx.beginPath();
+  ctx.arc(
+    person.x - person.radius * 0.7,
+    person.y + person.radius * 0.5,
+    gloveSize,
+    0,
+    Math.PI * 2
+  );
+  ctx.fillStyle = person.gloveColor; // Use the stored glove color
+  ctx.fill();
+
+  // Draw right glove using the stored glove color
+  ctx.beginPath();
+  ctx.arc(
+    person.x + person.radius * 0.7,
+    person.y + person.radius * 0.5,
+    gloveSize,
+    0,
+    Math.PI * 2
+  );
+  ctx.fillStyle = person.gloveColor; // Use the stored glove color
+  ctx.fill();
 }
 
 // Reaction delay in milliseconds
