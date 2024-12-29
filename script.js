@@ -27,6 +27,67 @@ for (let i = 0; i < flameCount; i++) {
   });
 }
 
+let mouseX = centerX; // Default to center
+let mouseY = centerY; // Default to center
+
+const smokeParticles = [];
+
+let lastSmokeEmit = 0;
+const smokeEmitInterval = 50; // Emit a particle every 50ms
+
+function emitSmokeParticles() {
+  const now = Date.now();
+  if (now - lastSmokeEmit > smokeEmitInterval) {
+    createSmokeParticle();
+    lastSmokeEmit = now;
+  }
+}
+
+function createSmokeParticle() {
+  const angle = Math.atan2(mouseY - centerY, mouseX - centerX); // Direction to mouse
+  const speed = Math.random() * 1.5 + 0.5; // Random speed
+
+  smokeParticles.push({
+    x: centerX,
+    y: centerY,
+    vx: Math.cos(angle) * speed, // Horizontal velocity
+    vy: Math.sin(angle) * speed, // Vertical velocity
+    size: Math.random() * 8 + 4, // Random size
+    opacity: 1, // Full opacity
+  });
+}
+
+function updateSmokeParticles() {
+  for (let i = smokeParticles.length - 1; i >= 0; i--) {
+    const p = smokeParticles[i];
+
+    p.x += p.vx;
+    p.y += p.vy;
+    p.size *= 0.98; // Gradually shrink
+    p.opacity -= 0.01; // Gradually fade
+
+    // Remove particle if it's too small or invisible
+    if (p.size < 0.5 || p.opacity <= 0) {
+      smokeParticles.splice(i, 1);
+    }
+  }
+}
+
+function drawSmokeParticles() {
+  for (const p of smokeParticles) {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(128, 128, 128, ${p.opacity})`; // Gray color with opacity
+    ctx.fill();
+  }
+}
+
+canvas.addEventListener("mousemove", (event) => {
+  const rect = canvas.getBoundingClientRect();
+  mouseX = event.clientX - rect.left;
+  mouseY = event.clientY - rect.top;
+});
+
 function updateFlames() {
   const flameUpdateInterval = 400; // Time between flame updates (in ms)
   const now = Date.now();
@@ -103,6 +164,9 @@ function gameLoop() {
   drawGlow(); // Draw glowing effect
   updateFlames(); // Update flame properties
   drawCampfire(); // Draw flickering flames
+  emitSmokeParticles(); // Emit new smoke particles
+  updateSmokeParticles(); // Update smoke particles
+  drawSmokeParticles(); // Draw smoke particles
 
   requestAnimationFrame(gameLoop); // Repeat
 }
