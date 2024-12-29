@@ -68,10 +68,24 @@ function drawPeople() {
 // Reaction delay in milliseconds
 const reactionDelay = 500; // Delay before starting to react to smoke (500ms)
 
+// Random movement parameters
+const randomMovementStrength = 0.01; // Controls how often the random movement happens
+const randomMovementMagnitude = 10; // Controls how large each random step is
+
 function movePeople() {
   const damping = 0.9; // Reduce velocity slightly each frame for smoother movement
 
   for (const person of people) {
+    // Apply a random movement step with a larger magnitude
+    const randomX =
+      (Math.random() - 0.5) * randomMovementStrength * randomMovementMagnitude;
+    const randomY =
+      (Math.random() - 0.5) * randomMovementStrength * randomMovementMagnitude;
+
+    // Apply random movement
+    person.vx += randomX;
+    person.vy += randomY;
+
     if (person.avoiding) {
       // Move outward from the campfire (away from smoke) and rotate along the circle
       let dx = person.x - centerX;
