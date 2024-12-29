@@ -107,6 +107,35 @@ function movePeople() {
   }
 }
 
+function avoidCollisions() {
+  const collisionThreshold = 50; // Minimum distance between people
+  const separationForce = 0.5; // How strongly people move apart
+
+  for (let i = 0; i < people.length; i++) {
+    for (let j = i + 1; j < people.length; j++) {
+      const personA = people[i];
+      const personB = people[j];
+
+      const dx = personB.x - personA.x;
+      const dy = personB.y - personA.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist < collisionThreshold) {
+        // Apply a force to separate the two people
+        const overlap = collisionThreshold - dist;
+        const separationX = (dx / dist) * overlap * separationForce;
+        const separationY = (dy / dist) * overlap * separationForce;
+
+        // Move the people apart
+        personA.x -= separationX / 2;
+        personA.y -= separationY / 2;
+        personB.x += separationX / 2;
+        personB.y += separationY / 2;
+      }
+    }
+  }
+}
+
 function emitSmokeParticles() {
   const now = Date.now();
   if (now - lastSmokeEmit > smokeEmitInterval) {
@@ -242,6 +271,7 @@ function gameLoop() {
 
   checkSmokeProximity(); // Check if people are near smoke
   movePeople(); // Move people based on proximity
+  avoidCollisions(); // Adjust positions to avoid crowding
   drawPeople(); // Draw people around the fire
 
   requestAnimationFrame(gameLoop); // Repeat
