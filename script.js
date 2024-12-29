@@ -402,13 +402,13 @@ function drawGlow() {
     20,
     centerX,
     centerY,
-    100
+    150
   );
-  gradient.addColorStop(0, "rgba(255, 165, 0, 0.6)");
+  gradient.addColorStop(0, "rgba(255, 234, 0, 0.6)");
   gradient.addColorStop(1, "rgba(255, 69, 0, 0)");
 
   ctx.beginPath();
-  ctx.arc(centerX, centerY, 100, 0, Math.PI * 2);
+  ctx.arc(centerX, centerY, 150, 0, Math.PI * 2);
   ctx.fillStyle = gradient;
   ctx.fill();
 }
