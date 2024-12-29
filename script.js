@@ -65,22 +65,8 @@ function drawPeople() {
   }
 }
 
-function checkSmokeProximity() {
-  const smokeThreshold = 50; // Distance to trigger avoidance
-
-  for (const person of people) {
-    person.avoiding = false; // Reset avoidance state
-
-    for (const particle of smokeParticles) {
-      const dist = Math.hypot(person.x - particle.x, person.y - particle.y);
-
-      if (dist < smokeThreshold) {
-        person.avoiding = true;
-        break;
-      }
-    }
-  }
-}
+// Reaction delay in milliseconds
+const reactionDelay = 500; // Delay before starting to react to smoke (500ms)
 
 function movePeople() {
   const damping = 0.9; // Reduce velocity slightly each frame for smoother movement
@@ -120,11 +106,55 @@ function movePeople() {
     // Apply damping to smooth movement
     person.vx *= damping;
     person.vy *= damping;
+
+    // Manage reaction delay if close to smoke
+    if (person.avoiding) {
+      person.reactionTime = person.reactionTime || Date.now(); // Set reaction time if not set
+    }
+
+    // If within the reaction delay and close to smoke, don't react yet
+    if (
+      !person.avoiding &&
+      person.reactionTime &&
+      Date.now() - person.reactionTime < reactionDelay
+    ) {
+      person.avoiding = true; // Start avoiding after the delay
+    }
+  }
+}
+
+function checkSmokeProximity() {
+  const smokeThreshold = 50; // Distance to trigger avoidance
+
+  for (const person of people) {
+    let smokeNearby = false;
+    for (const particle of smokeParticles) {
+      const dist = Math.hypot(person.x - particle.x, person.y - particle.y);
+
+      if (dist < smokeThreshold) {
+        smokeNearby = true;
+        break;
+      }
+    }
+
+    // Only set avoiding state if close to smoke
+    if (smokeNearby && !person.reactionTime) {
+      person.reactionTime = Date.now(); // Track the time they first get close to the smoke
+    }
+
+    // Change avoiding state to true if enough time has passed after initial detection
+    if (!smokeNearby && person.reactionTime) {
+      // Reset reaction time if smoke is no longer nearby
+      person.reactionTime = null;
+    }
+
+    person.avoiding =
+      smokeNearby && Date.now() - person.reactionTime >= reactionDelay;
   }
 }
 
 function avoidCollisions() {
-  const collisionThreshold = 50; // Minimum distance between people
+  const collisionThreshold = 80; // Minimum distance between people
   const separationForce = 0.1; // Strength of separation force
 
   for (let i = 0; i < people.length; i++) {
