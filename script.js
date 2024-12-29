@@ -83,20 +83,26 @@ function checkSmokeProximity() {
 function movePeople() {
   for (const person of people) {
     if (person.avoiding) {
-      // Move outward from the campfire (away from smoke)
-      const dx = person.x - centerX;
-      const dy = person.y - centerY;
-      const magnitude = Math.hypot(dx, dy);
+      // Move outward from the campfire (away from smoke) and rotate along the circle
+      let dx = person.x - centerX;
+      let dy = person.y - centerY;
 
-      person.x += (dx / magnitude) * person.speed;
-      person.y += (dy / magnitude) * person.speed;
+      // Calculate the angle to move along the circle
+      const angleToMouse = Math.atan2(dy, dx);
+      const targetAngle = angleToMouse + Math.sign(mouseX - centerX) * 0.1; // Rotate away from smoke
+
+      // Update the person's position
+      const radius = Math.hypot(dx, dy); // Distance from the center
+      person.x = centerX + Math.cos(targetAngle) * (radius + person.speed);
+      person.y = centerY + Math.sin(targetAngle) * (radius + person.speed);
     } else {
-      // Keep the person stationary in their original position
+      // Smoothly return to the original circular position
       const originalX = centerX + Math.cos(person.angle) * circleRadius;
       const originalY = centerY + Math.sin(person.angle) * circleRadius;
 
-      person.x = originalX;
-      person.y = originalY;
+      // Interpolate the position
+      person.x += (originalX - person.x) * 0.05; // Gradual return
+      person.y += (originalY - person.y) * 0.05; // Gradual return
     }
   }
 }
