@@ -37,24 +37,7 @@ resizeCanvas();
 const circleRadius = 120; // Distance from campfire
 const reactionDelay = 500; // Delay before starting to react to smoke (500ms)
 
-// Game entities
-const people = [];
-const smokeParticles = [];
-const snowflakes = [];
-
-// Configuration
-const config = {
-  numPeople: 9,
-  smokeEmitInterval: 200,
-  snowflakeCount: 100,
-  movement: {
-    randomStrength: 0.01,
-    randomMagnitude: 10,
-    damping: 0.9,
-  },
-};
-
-// Sprite configuration
+// Load images
 const peopleSprites = new Image();
 peopleSprites.src = "people-sprites.png";
 
@@ -75,6 +58,29 @@ const campfireConfig = {
   currentFrame: 0,
   lastFrameUpdate: 0,
   frameInterval: 100, // Update frame every 100ms
+};
+
+const treeImage = new Image();
+treeImage.src = "tree.png";
+
+// Game entities
+const people = [];
+const smokeParticles = [];
+const snowflakes = [];
+const trees = [];
+
+// Configuration
+const config = {
+  numPeople: 9,
+  numTrees: 6,
+  smokeEmitInterval: 200,
+  snowflakeCount: 100,
+  treeRadius: 350, // Trees will be placed further out than people
+  movement: {
+    randomStrength: 0.01,
+    randomMagnitude: 10,
+    damping: 0.9,
+  },
 };
 
 // Initialize people
@@ -112,25 +118,58 @@ for (let i = 0; i < config.numPeople; i++) {
   });
 }
 
-function createSnowflake(initializing = false) {
-  // If initializing, place anywhere on screen, otherwise above screen
-  const x = Math.random() * (canvas.width + 400) - 200;
-  const y = initializing ? Math.random() * canvas.height : -20;
-
-  return {
-    x,
-    y,
-    size: Math.random() * 3 + 1,
-    speed: Math.random() * 1 + 0.5,
-    wobble: Math.random() * Math.PI * 2,
-    wobbleSpeed: Math.random() * 0.02 + 0.01,
-  };
-}
-
 // Initialize snowflakes across the screen
 for (let i = 0; i < config.snowflakeCount; i++) {
   snowflakes.push(createSnowflake(true));
 }
+
+// Initialize trees after image is loaded
+treeImage.onload = () => {
+  // Clear existing trees
+  trees.length = 0;
+
+  const margin = 100; // Fixed margin from edges
+  const minDistance = 300; // Minimum distance from center
+  const maxAttempts = 100; // Maximum attempts to place each tree
+
+  while (trees.length < config.numTrees && maxAttempts > 0) {
+    // Generate random position within screen bounds
+    const scale = 0.8 + Math.random() * 0.2;
+    const treeWidth = treeImage.width * scale;
+    const treeHeight = treeImage.height * scale;
+
+    const x =
+      margin +
+      treeWidth / 2 +
+      Math.random() * (canvas.width - 2 * margin - treeWidth);
+    const y =
+      margin +
+      treeHeight +
+      Math.random() * (canvas.height - 2 * margin - treeHeight);
+
+    // Check distance from center
+    const distanceFromCenter = Math.hypot(x - centerX, y - centerY);
+    if (distanceFromCenter < minDistance) continue;
+
+    // Check distance from other trees
+    let tooClose = false;
+    for (const tree of trees) {
+      const dist = Math.hypot(x - tree.x, y - tree.y);
+      if (dist < 100) {
+        // Minimum distance between trees
+        tooClose = true;
+        break;
+      }
+    }
+    if (tooClose) continue;
+
+    trees.push({
+      x,
+      y,
+      scale,
+    });
+  }
+};
 
 // Drawing functions
 function drawPeople() {
@@ -206,6 +245,16 @@ function drawSnowflakes() {
     ctx.beginPath();
     ctx.arc(flake.x, flake.y, flake.size, 0, Math.PI * 2);
     ctx.fill();
+  }
+}
+
+function drawTrees() {
+  for (const tree of trees) {
+    ctx.save();
+    ctx.translate(tree.x, tree.y);
+    ctx.scale(tree.scale, tree.scale);
+    ctx.drawImage(treeImage, -treeImage.width / 2, -treeImage.height);
+    ctx.restore();
   }
 }
 
@@ -484,6 +533,14 @@ window.addEventListener("resize", () => {
     person.x = centerX + Math.cos(person.angle) * circleRadius;
     person.y = centerY + Math.sin(person.angle) * circleRadius;
   }
+
+  // Re-position trees
+  for (const tree of trees) {
+    const angle = Math.atan2(tree.y - centerY, tree.x - centerX);
+    const distance = Math.hypot(tree.x - centerX, tree.y - centerY);
+    tree.x = centerX + Math.cos(angle) * distance;
+    tree.y = centerY + Math.sin(angle) * distance;
+  }
 });
 
 // Mouse movement handler
@@ -548,6 +605,7 @@ function gameLoop() {
   drawSmokeParticles();
   updateSnowflakes();
   drawSnowflakes();
+  drawTrees();
 
   applyFireRepulsion();
   checkSmokeProximity();
@@ -562,3 +620,18 @@ function gameLoop() {
 peopleSprites.onload = () => {
   gameLoop();
 };
+
+function createSnowflake(initializing = false) {
+  // If initializing, place anywhere on screen, otherwise above screen
+  const x = Math.random() * (canvas.width + 400) - 200;
+  const y = initializing ? Math.random() * canvas.height : -20;
+
+  return {
+    x,
+    y,
+    size: Math.random() * 3 + 1,
+    speed: Math.random() * 1 + 0.5,
+    wobble: Math.random() * Math.PI * 2,
+    wobbleSpeed: Math.random() * 0.02 + 0.01,
+  };
+}
