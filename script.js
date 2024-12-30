@@ -27,6 +27,12 @@ setTimeout(() => {
 
 // Create audio element
 const bgMusic = new Audio("Winter's Whisper.mp3");
+bgMusic.loop = false;
+
+bgMusic.addEventListener("ended", () => {
+  isMusicPlaying = false;
+  musicButton.innerHTML = "🔈";
+});
 
 // Create music control button
 const musicButton = document.createElement("button");
@@ -57,8 +63,12 @@ let isMusicPlaying = false;
 musicButton.addEventListener("click", () => {
   if (isMusicPlaying) {
     bgMusic.pause();
+    bgMusic.currentTime = 0;
+    bgMusic.loop = false;
     musicButton.innerHTML = "🔈";
   } else {
+    bgMusic.currentTime = 0;
+    bgMusic.loop = false;
     bgMusic.play().catch((error) => {
       console.log("Autoplay prevented:", error);
     });
