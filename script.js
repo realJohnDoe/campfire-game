@@ -4,22 +4,38 @@ const ctx = canvas.getContext("2d", { alpha: true });
 ctx.imageSmoothingEnabled = true;
 ctx.imageSmoothingQuality = "high";
 
-// Resize canvas to fill the window
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-// Constants
-const centerX = canvas.width / 2;
-const centerY = canvas.height / 2;
-const circleRadius = 120; // Distance from campfire
-const reactionDelay = 500; // Delay before starting to react to smoke (500ms)
+// Variables that will be updated on resize
+let centerX;
+let centerY;
 
 // Game state
 const state = {
   mouseX: centerX,
   mouseY: centerY,
   lastSmokeEmit: 0,
+  isTouching: false, // Track if user is currently touching
+  lastTouchX: centerX,
+  lastTouchY: centerY,
 };
+
+// Resize canvas to fill the window
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  centerX = canvas.width / 2;
+  centerY = canvas.height / 2;
+
+  // Update mouse position to center when resizing
+  state.mouseX = centerX;
+  state.mouseY = centerY;
+}
+
+// Initial setup
+resizeCanvas();
+
+// Constants
+const circleRadius = 120; // Distance from campfire
+const reactionDelay = 500; // Delay before starting to react to smoke (500ms)
 
 // Game entities
 const people = [];
@@ -461,11 +477,64 @@ function avoidCollisions() {
 }
 
 // Event listeners
-canvas.addEventListener("mousemove", (event) => {
-  const rect = canvas.getBoundingClientRect();
-  state.mouseX = event.clientX - rect.left;
-  state.mouseY = event.clientY - rect.top;
+window.addEventListener("resize", () => {
+  resizeCanvas();
+  // Re-center any entities that need to be centered
+  for (const person of people) {
+    person.x = centerX + Math.cos(person.angle) * circleRadius;
+    person.y = centerY + Math.sin(person.angle) * circleRadius;
+  }
 });
+
+// Mouse movement handler
+function updateMousePosition(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  state.mouseX = clientX - rect.left;
+  state.mouseY = clientY - rect.top;
+}
+
+// Mouse event
+canvas.addEventListener("mousemove", (event) => {
+  updateMousePosition(event.clientX, event.clientY);
+});
+
+// Touch events
+canvas.addEventListener(
+  "touchstart",
+  (event) => {
+    event.preventDefault();
+    if (event.touches.length > 0) {
+      updateMousePosition(event.touches[0].clientX, event.touches[0].clientY);
+    }
+  },
+  { passive: false }
+);
+
+canvas.addEventListener(
+  "touchmove",
+  (event) => {
+    event.preventDefault();
+    if (event.touches.length > 0) {
+      updateMousePosition(event.touches[0].clientX, event.touches[0].clientY);
+    }
+  },
+  { passive: false }
+);
+
+canvas.addEventListener(
+  "touchend",
+  (event) => {
+    event.preventDefault();
+  },
+  { passive: false }
+);
+
+// Add meta viewport tag for proper mobile scaling
+const metaTag = document.createElement("meta");
+metaTag.name = "viewport";
+metaTag.content =
+  "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
+document.head.appendChild(metaTag);
 
 // Game loop
 function gameLoop() {
