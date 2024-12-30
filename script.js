@@ -19,18 +19,15 @@ const state = {
   mouseX: centerX,
   mouseY: centerY,
   lastSmokeEmit: 0,
-  lastFlameUpdate: 0,
 };
 
 // Game entities
-const flames = [];
-const smokeParticles = [];
 const people = [];
+const smokeParticles = [];
 
 // Configuration
 const config = {
   numPeople: 10,
-  flameCount: 10,
   smokeEmitInterval: 200,
   movement: {
     randomStrength: 0.01,
@@ -40,6 +37,9 @@ const config = {
 };
 
 // Sprite configuration
+const peopleSprites = new Image();
+peopleSprites.src = "people-sprites.png";
+
 const spriteConfig = {
   width: 170,
   height: 256,
@@ -47,23 +47,17 @@ const spriteConfig = {
   rows: 4,
 };
 
-// Load sprites
-const peopleSprites = new Image();
-peopleSprites.src = "people-sprites.png";
+const campfireSprites = new Image();
+campfireSprites.src = "campfire-sheet.png";
 
-// Initialize flames
-for (let i = 0; i < config.flameCount; i++) {
-  flames.push({
-    offsetX: Math.random() * 20 - 10,
-    offsetY: Math.random() * 20 - 10,
-    radius: Math.random() * 30 + 20,
-    color: [
-      "rgba(255, 100, 0, 0.8)",
-      "rgba(255, 165, 0, 0.6)",
-      "rgba(255, 69, 0, 0.4)",
-    ][Math.floor(Math.random() * 3)],
-  });
-}
+const campfireConfig = {
+  width: 32,
+  height: 64,
+  frames: 8,
+  currentFrame: 0,
+  lastFrameUpdate: 0,
+  frameInterval: 100, // Update frame every 100ms
+};
 
 // Initialize people
 for (let i = 0; i < config.numPeople; i++) {
@@ -110,23 +104,6 @@ function drawPeople() {
   }
 }
 
-function drawLogs() {
-  ctx.fillStyle = "#6B2503"; // Brown color for logs
-
-  // Draw two logs crossing each other
-  ctx.save();
-  ctx.translate(centerX, centerY);
-  ctx.rotate(Math.PI / 4); // Rotate for crossing effect
-  ctx.fillRect(-60, -10, 120, 20); // Horizontal log
-  ctx.restore();
-
-  ctx.save();
-  ctx.translate(centerX, centerY);
-  ctx.rotate(-Math.PI / 4); // Rotate for crossing effect
-  ctx.fillRect(-60, -10, 120, 20); // Vertical log
-  ctx.restore();
-}
-
 function drawGlow() {
   const gradient = ctx.createRadialGradient(
     centerX,
@@ -134,30 +111,33 @@ function drawGlow() {
     20,
     centerX,
     centerY,
-    150
+    100
   );
   gradient.addColorStop(0, "rgba(255, 234, 0, 0.6)");
   gradient.addColorStop(1, "rgba(255, 69, 0, 0)");
 
   ctx.beginPath();
-  ctx.arc(centerX, centerY, 150, 0, Math.PI * 2);
+  ctx.arc(centerX, centerY, 100, 0, Math.PI * 2);
   ctx.fillStyle = gradient;
   ctx.fill();
 }
 
 function drawCampfire() {
-  for (let flame of flames) {
-    ctx.beginPath();
-    ctx.arc(
-      centerX + flame.offsetX,
-      centerY + flame.offsetY,
-      flame.radius,
-      0,
-      Math.PI * 2
-    );
-    ctx.fillStyle = flame.color;
-    ctx.fill();
-  }
+  // Draw the current frame of the campfire sprite
+  ctx.save();
+  ctx.translate(centerX, centerY - campfireConfig.height * 1.5 - 40); // Added 40px upward offset
+  ctx.drawImage(
+    campfireSprites,
+    campfireConfig.currentFrame * campfireConfig.width,
+    0,
+    campfireConfig.width,
+    campfireConfig.height,
+    -campfireConfig.width * 1.5,
+    0,
+    campfireConfig.width * 3,
+    campfireConfig.height * 3
+  );
+  ctx.restore();
 }
 
 function drawSmokeParticles() {
@@ -171,21 +151,12 @@ function drawSmokeParticles() {
 
 // Update functions
 function updateFlames() {
-  const flameUpdateInterval = 400; // Time between flame updates (in ms)
   const now = Date.now();
-  if (now - state.lastFlameUpdate > flameUpdateInterval) {
-    // Update each flame's properties
-    for (let flame of flames) {
-      flame.offsetX = Math.random() * 20 - 10;
-      flame.offsetY = Math.random() * 20 - 10;
-      flame.radius = Math.random() * 30 + 20;
-      flame.color = [
-        "rgba(255, 100, 0, 0.8)",
-        "rgba(255, 165, 0, 0.6)",
-        "rgba(255, 69, 0, 0.4)",
-      ][Math.floor(Math.random() * 3)];
-    }
-    state.lastFlameUpdate = now; // Reset the timer
+  if (now - campfireConfig.lastFrameUpdate > campfireConfig.frameInterval) {
+    // Update to the next frame
+    campfireConfig.currentFrame =
+      (campfireConfig.currentFrame + 1) % campfireConfig.frames;
+    campfireConfig.lastFrameUpdate = now;
   }
 }
 
@@ -382,7 +353,6 @@ canvas.addEventListener("mousemove", (event) => {
 function gameLoop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  drawLogs();
   drawGlow();
   updateFlames();
   drawCampfire();
