@@ -27,7 +27,6 @@ setTimeout(() => {
 
 // Create audio element
 const bgMusic = new Audio("Winter's Whisper.mp3");
-bgMusic.loop = true;
 
 // Create music control button
 const musicButton = document.createElement("button");
