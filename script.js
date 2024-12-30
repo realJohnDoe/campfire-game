@@ -25,6 +25,57 @@ setTimeout(() => {
   setTimeout(() => tooltip.remove(), 1000);
 }, 4000);
 
+// Create audio element
+const bgMusic = new Audio("Winter's Whisper.mp3");
+bgMusic.loop = true;
+
+// Create music control button
+const musicButton = document.createElement("button");
+musicButton.style.cssText = `
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  transition: background 0.3s;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+`;
+musicButton.innerHTML = "🔈"; // Initial state: unmuted
+document.body.appendChild(musicButton);
+
+let isMusicPlaying = false;
+
+musicButton.addEventListener("click", () => {
+  if (isMusicPlaying) {
+    bgMusic.pause();
+    musicButton.innerHTML = "🔈";
+  } else {
+    bgMusic.play().catch((error) => {
+      console.log("Autoplay prevented:", error);
+    });
+    musicButton.innerHTML = "🔊";
+  }
+  isMusicPlaying = !isMusicPlaying;
+});
+
+// Hover effect
+musicButton.addEventListener("mouseover", () => {
+  musicButton.style.background = "rgba(0, 0, 0, 0.9)";
+});
+musicButton.addEventListener("mouseout", () => {
+  musicButton.style.background = "rgba(0, 0, 0, 0.7)";
+});
+
 // Canvas setup
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d", { alpha: true });
