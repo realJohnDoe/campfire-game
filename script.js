@@ -208,10 +208,26 @@ treeImage.onload = () => {
 
   const margin = 100; // Fixed margin from edges
   const minDistance = 300; // Minimum distance from center
-  const maxAttempts = 100; // Maximum attempts to place each tree
+  const maxAttempts = 50; // Reduced max attempts
   const minTreeDistance = 150; // Minimum distance between trees
 
-  while (trees.length < config.numTrees && maxAttempts > 0) {
+  // Calculate available space
+  const availableWidth = canvas.width - 2 * margin;
+  const availableHeight = canvas.height - 2 * margin;
+  const availableArea = availableWidth * availableHeight;
+
+  // Adjust number of trees based on screen size
+  const baseNumTrees = config.numTrees;
+  const minScreenArea = 800 * 600; // Reference screen size
+  const actualNumTrees = Math.max(2, Math.min(
+    baseNumTrees,
+    Math.floor(baseNumTrees * Math.sqrt(availableArea / minScreenArea))
+  ));
+
+  let attempts = 0;
+  while (trees.length < actualNumTrees && attempts < maxAttempts) {
+    attempts++;
+    
     // Generate random position within screen bounds
     const scale = 0.8 + Math.random() * 0.2;
     const treeWidth = treeImage.width * scale;
@@ -254,6 +270,43 @@ treeImage.onload = () => {
       y,
       scale,
     });
+  }
+
+  // If we couldn't place enough trees, reduce spacing and try again
+  if (trees.length < 2) {
+    const reducedDistance = minTreeDistance * 0.7;
+    attempts = 0;
+    while (trees.length < 2 && attempts < maxAttempts) {
+      attempts++;
+      // ... (same placement logic but with reducedDistance)
+      const x = centerX + (Math.random() - 0.5) * availableWidth;
+      const y = centerY + (Math.random() - 0.5) * availableHeight;
+
+      if (Math.hypot(x - centerX, y - centerY) < minDistance) continue;
+
+      if (
+        x < margin + treeWidth / 2 ||
+        x > canvas.width - margin - treeWidth / 2 ||
+        y < margin + treeHeight / 2 ||
+        y > canvas.height - margin - treeHeight / 2
+      )
+        continue;
+
+      let tooClose = false;
+      for (const tree of trees) {
+        if (Math.hypot(x - tree.x, y - tree.y) < reducedDistance) {
+          tooClose = true;
+          break;
+        }
+      }
+      if (tooClose) continue;
+
+      trees.push({
+        x,
+        y,
+        scale: 0.8 + Math.random() * 0.2,
+      });
+    }
   }
 };
 
