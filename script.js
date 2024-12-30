@@ -62,6 +62,21 @@ const campfireConfig = {
 };
 
 // Initialize people
+const totalSprites = spriteConfig.columns * spriteConfig.rows;
+const availableSpriteIndices = Array.from(
+  { length: totalSprites },
+  (_, i) => i
+);
+
+// Shuffle the available indices
+for (let i = availableSpriteIndices.length - 1; i > 0; i--) {
+  const j = Math.floor(Math.random() * (i + 1));
+  [availableSpriteIndices[i], availableSpriteIndices[j]] = [
+    availableSpriteIndices[j],
+    availableSpriteIndices[i],
+  ];
+}
+
 for (let i = 0; i < config.numPeople; i++) {
   const angle = (i / config.numPeople) * Math.PI * 2;
   const x = centerX + Math.cos(angle) * circleRadius;
@@ -71,9 +86,7 @@ for (let i = 0; i < config.numPeople; i++) {
     x,
     y,
     radius: 20,
-    spriteIndex: Math.floor(
-      Math.random() * (spriteConfig.columns * spriteConfig.rows)
-    ),
+    spriteIndex: availableSpriteIndices[i], // Use next available unique index
     angle,
     speed: 0,
     targetAngle: angle,
