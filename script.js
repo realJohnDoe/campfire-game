@@ -1,3 +1,30 @@
+// Create and style tooltip
+const tooltip = document.createElement("div");
+tooltip.textContent =
+  "Move the cursor or touch the screen to control the wind 😉";
+tooltip.style.cssText = `
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-family: Arial, sans-serif;
+  pointer-events: none;
+  transition: opacity 1s;
+  z-index: 1000;
+`;
+document.body.appendChild(tooltip);
+
+// Fade out tooltip after 4 seconds
+setTimeout(() => {
+  tooltip.style.opacity = "0";
+  // Remove from DOM after fade out
+  setTimeout(() => tooltip.remove(), 1000);
+}, 4000);
+
 // Canvas setup
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d", { alpha: true });
