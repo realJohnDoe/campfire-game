@@ -209,6 +209,7 @@ treeImage.onload = () => {
   const margin = 100; // Fixed margin from edges
   const minDistance = 300; // Minimum distance from center
   const maxAttempts = 100; // Maximum attempts to place each tree
+  const minTreeDistance = 150; // Minimum distance between trees
 
   while (trees.length < config.numTrees && maxAttempts > 0) {
     // Generate random position within screen bounds
@@ -216,25 +217,32 @@ treeImage.onload = () => {
     const treeWidth = treeImage.width * scale;
     const treeHeight = treeImage.height * scale;
 
-    const x =
-      margin +
-      treeWidth / 2 +
-      Math.random() * (canvas.width - 2 * margin - treeWidth);
-    const y =
-      margin +
-      treeHeight +
-      Math.random() * (canvas.height - 2 * margin - treeHeight);
+    // Calculate available space and center point for placement
+    const availableWidth = canvas.width - 2 * margin - treeWidth;
+    const availableHeight = canvas.height - 2 * margin - treeHeight;
+
+    // Place relative to center point with random offset
+    const x = centerX + (Math.random() - 0.5) * availableWidth;
+    const y = centerY + (Math.random() - 0.5) * availableHeight;
 
     // Check distance from center
     const distanceFromCenter = Math.hypot(x - centerX, y - centerY);
     if (distanceFromCenter < minDistance) continue;
 
+    // Check if tree is within screen bounds
+    if (
+      x < margin + treeWidth / 2 ||
+      x > canvas.width - margin - treeWidth / 2 ||
+      y < margin + treeHeight / 2 ||
+      y > canvas.height - margin - treeHeight / 2
+    )
+      continue;
+
     // Check distance from other trees
     let tooClose = false;
     for (const tree of trees) {
       const dist = Math.hypot(x - tree.x, y - tree.y);
-      if (dist < 100) {
-        // Minimum distance between trees
+      if (dist < minTreeDistance) {
         tooClose = true;
         break;
       }
