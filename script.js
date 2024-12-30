@@ -83,22 +83,24 @@ for (let i = 0; i < config.numPeople; i++) {
   });
 }
 
-function createSnowflake() {
-  // Create snowflakes in a wider area above the screen
+function createSnowflake(initializing = false) {
+  // If initializing, place anywhere on screen, otherwise above screen
   const x = Math.random() * (canvas.width + 400) - 200;
+  const y = initializing ? Math.random() * canvas.height : -20;
+
   return {
     x,
-    y: -20,
+    y,
     size: Math.random() * 3 + 1,
     speed: Math.random() * 1 + 0.5,
-    wobble: Math.random() * Math.PI * 2, // Random starting phase for wobble
-    wobbleSpeed: Math.random() * 0.02 + 0.01, // How fast it wobbles side to side
+    wobble: Math.random() * Math.PI * 2,
+    wobbleSpeed: Math.random() * 0.02 + 0.01,
   };
 }
 
-// Initialize snowflakes
+// Initialize snowflakes across the screen
 for (let i = 0; i < config.snowflakeCount; i++) {
-  snowflakes.push(createSnowflake());
+  snowflakes.push(createSnowflake(true));
 }
 
 // Drawing functions
