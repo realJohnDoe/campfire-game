@@ -211,8 +211,7 @@ function updateSmokeParticles() {
 }
 
 function updateSnowflakes() {
-  const windAngle = Math.atan2(state.mouseY - centerY, state.mouseX - centerX);
-  const windStrength = 2;
+  const wind = calculateWind();
   const windRadius = 150; // How far from the fire the wind affects snowflakes
 
   for (let i = snowflakes.length - 1; i >= 0; i--) {
@@ -232,9 +231,9 @@ function updateSnowflakes() {
     // Calculate wind influence (0 to 1) based on distance to fire
     const windInfluence = Math.max(0, 1 - distanceToFire / windRadius);
 
-    // Add wind effect, scaled by distance to fire
-    flake.x += Math.cos(windAngle) * windStrength * windInfluence;
-    flake.y += Math.sin(windAngle) * windStrength * 0.5 * windInfluence;
+    // Add wind effect, scaled by distance to fire and cursor distance
+    flake.x += Math.cos(wind.angle) * wind.strength * windInfluence;
+    flake.y += Math.sin(wind.angle) * wind.strength * 0.5 * windInfluence;
 
     // Add wobble movement
     flake.x += Math.sin(flake.wobble) * 0.5;
@@ -259,26 +258,39 @@ function emitSmokeParticles() {
 }
 
 function createSmokeParticle() {
-  const angle = Math.atan2(state.mouseY - centerY, state.mouseX - centerX); // Direction to mouse
-
-  // Randomize speed within a range (this makes the particles move at different speeds)
-  const speed = Math.random() * 1.5 + 0.2;
-
-  // Introduce a slight variation to the direction (deviates up to 30 degrees)
-  const directionVariance = (Math.random() - 0.5) * 1.0; // Small random variance
-  const variedAngle = angle + directionVariance;
+  const wind = calculateWind();
+  const speed = Math.random() * 1.5 + 0.2 * wind.strength; // Base speed plus wind contribution
 
   // Add the smoke particle to the array with random size, opacity, and speed
   smokeParticles.push({
     x: centerX,
     y: centerY,
-    vx: Math.cos(variedAngle) * speed, // Randomized horizontal velocity
-    vy: Math.sin(variedAngle) * speed, // Randomized vertical velocity
-    size: Math.random() * 8 + 4, // Random initial size between 4 and 12
-    opacity: 0.5, // Full opacity at the start
-    opacityDecay: Math.random() * 0.005 + 0.002, // Random decay rate for opacity
-    growthRate: Math.random() * 0.5 + 0.5, // Random growth rate for the particle size
+    vx: Math.cos(wind.angle) * speed,
+    vy: Math.sin(wind.angle) * speed,
+    size: Math.random() * 8 + 4,
+    opacity: 0.5,
+    opacityDecay: Math.random() * 0.005 + 0.002,
+    growthRate: Math.random() * 0.5 + 0.5,
   });
+}
+
+function calculateWind() {
+  const windAngle = Math.atan2(state.mouseY - centerY, state.mouseX - centerX);
+  const cursorDistance = Math.hypot(
+    state.mouseX - centerX,
+    state.mouseY - centerY
+  );
+  const maxWindDistance = 300; // Distance at which wind reaches maximum strength
+  const maxWindStrength = 3;
+
+  // Wind strength scales with cursor distance
+  const windStrength =
+    Math.min(cursorDistance / maxWindDistance, 1) * maxWindStrength;
+
+  return {
+    angle: windAngle,
+    strength: windStrength,
+  };
 }
 
 // Movement functions
@@ -405,7 +417,7 @@ function checkSmokeProximity() {
 }
 
 function avoidCollisions() {
-  const collisionThreshold = 50; // Minimum distance between people
+  const collisionThreshold = 70; // Minimum distance between people
   const separationForce = 0.05; // Strength of separation force
 
   for (let i = 0; i < people.length; i++) {
