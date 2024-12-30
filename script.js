@@ -39,6 +39,24 @@ const people = [];
 const numPeople = 10; // Number of people
 const circleRadius = 150; // Distance from campfire
 
+// Load the sprite sheet
+const peopleSprites = new Image();
+peopleSprites.src = "people-sprites.webp";
+
+// Wait for the sprite to load before starting the game
+peopleSprites.onload = () => {
+  gameLoop(); // Start the loop once sprites are loaded
+};
+
+// Sprite configuration
+const spriteConfig = {
+  width: 170, // 1024/6 ≈ 170 pixels per sprite width
+  height: 256, // 1024/4 = 256 pixels per sprite height
+  columns: 6, // 6 sprites per row
+  rows: 4, // 4 rows of sprites
+};
+
+
 // Function to generate a random color
 function getRandomColor() {
   const letters = "0123456789ABCDEF";
@@ -49,46 +67,53 @@ function getRandomColor() {
   return color;
 }
 
-// Modify the people initialization
 for (let i = 0; i < numPeople; i++) {
-  const angle = (i / numPeople) * Math.PI * 2; // Angle in the circle
+  const angle = (i / numPeople) * Math.PI * 2;
   const x = centerX + Math.cos(angle) * circleRadius;
   const y = centerY + Math.sin(angle) * circleRadius;
-
-  // Generate and store colors for each person
-  const hatColor = getRandomColor();
-  const scarfColor = getRandomColor();
-  const gloveColor = getRandomColor();
-
+  
   people.push({
-    x,
-    y,
-    radius: 30, // Size of the person
-    angle, // Current angle around the campfire
-    speed: 1, // Speed of movement
-    avoiding: false, // Whether they are reacting to smoke
-    vx: 0, // Horizontal velocity
-    vy: 0, // Vertical velocity
-    hatColor, // Store hat color
-    scarfColor, // Store scarf color
-    gloveColor, // Store glove color
+      x,
+      y,
+      radius: 20,
+      spriteIndex: Math.floor(Math.random() * (spriteConfig.columns * spriteConfig.rows)),
+      angle,
+      speed: 0,
+      targetAngle: angle,
+      avoiding: false,
+      vx: 0,
+      vy: 0
   });
 }
 
-// Draw each person with random accessories
+
+// Draw each person with sprites
 function drawPeople() {
   for (const person of people) {
-    // Draw the body (person's head)
-    ctx.beginPath();
-    ctx.arc(person.x, person.y, person.radius, 0, Math.PI * 2);
-    ctx.fillStyle = "white"; // Body color (could be another random color too)
-    ctx.fill();
-    ctx.stroke(); // Optional: add a border
+    // Calculate which sprite to use (random row and column)
+    const row = Math.floor(person.spriteIndex / spriteConfig.columns);
+    const col = person.spriteIndex % spriteConfig.columns;
 
-    // Draw the winter accessories: hat, scarf, gloves
-    drawWinterHat(person);
-    drawScarf(person);
-    drawGloves(person);
+    // Save the current context state
+    ctx.save();
+
+    // Move to the person's position
+    ctx.translate(person.x, person.y);
+
+    // Draw the sprite
+    ctx.drawImage(
+      peopleSprites,
+      col * spriteConfig.width,
+      row * spriteConfig.height, // Source x, y
+      spriteConfig.width,
+      spriteConfig.height, // Source width, height
+      -person.radius,
+      -person.radius * 2, // Destination x, y (adjusted for height)
+      person.radius * 2,
+      person.radius * 4 // Destination width, height (adjusted for aspect ratio)
+    );
+
+    ctx.restore();
   }
 }
 
@@ -448,4 +473,3 @@ function gameLoop() {
 
   requestAnimationFrame(gameLoop); // Repeat
 }
-gameLoop(); // Start the loop
