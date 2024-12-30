@@ -11,7 +11,7 @@ canvas.height = window.innerHeight;
 // Constants
 const centerX = canvas.width / 2;
 const centerY = canvas.height / 2;
-const circleRadius = 150; // Distance from campfire
+const circleRadius = 120; // Distance from campfire
 const reactionDelay = 500; // Delay before starting to react to smoke (500ms)
 
 // Game state
@@ -27,7 +27,7 @@ const smokeParticles = [];
 
 // Configuration
 const config = {
-  numPeople: 10,
+  numPeople: 9,
   smokeEmitInterval: 200,
   movement: {
     randomStrength: 0.01,
@@ -213,8 +213,30 @@ function createSmokeParticle() {
 }
 
 // Movement functions
+function applyFireRepulsion() {
+  const fireRepulsionRadius = 70; // Distance at which fire starts pushing people away
+  const repulsionStrength = 0.8; // Strength of the repulsion force
+
+  for (const person of people) {
+    const dx = person.x - centerX;
+    const dy = person.y - centerY;
+    const distanceToFire = Math.hypot(dx, dy);
+
+    if (distanceToFire < fireRepulsionRadius) {
+      // Calculate repulsion force that increases as they get closer
+      const repulsionFactor =
+        (1 - distanceToFire / fireRepulsionRadius) * repulsionStrength;
+      const angle = Math.atan2(dy, dx);
+
+      // Apply strong outward force
+      person.vx += Math.cos(angle) * repulsionFactor;
+      person.vy += Math.sin(angle) * repulsionFactor;
+    }
+  }
+}
+
 function movePeople() {
-  const damping = config.movement.damping; // Reduce velocity slightly each frame for smoother movement
+  const damping = config.movement.damping;
 
   for (const person of people) {
     // Apply a random movement step with a larger magnitude
@@ -246,8 +268,8 @@ function movePeople() {
       const targetY = centerY + Math.sin(targetAngle) * (radius + person.speed);
 
       // Adjust velocity toward the target position
-      person.vx += (targetX - person.x) * 0.05;
-      person.vy += (targetY - person.y) * 0.05;
+      person.vx += (targetX - person.x) * 0.02;
+      person.vy += (targetY - person.y) * 0.02;
     } else {
       // Calculate position on the circle (return to the circle)
       const angle = Math.atan2(person.y - centerY, person.x - centerX);
@@ -255,8 +277,8 @@ function movePeople() {
       const targetY = centerY + Math.sin(angle) * circleRadius;
 
       // Adjust velocity toward the circle position
-      person.vx += (targetX - person.x) * 0.05;
-      person.vy += (targetY - person.y) * 0.05;
+      person.vx += (targetX - person.x) * 0.02;
+      person.vy += (targetY - person.y) * 0.02;
     }
 
     // Apply velocities to update positions
@@ -269,7 +291,7 @@ function movePeople() {
 
     // Manage reaction delay if close to smoke
     if (person.avoiding) {
-      person.reactionTime = person.reactionTime || Date.now(); // Set reaction time if not set
+      person.reactionTime = person.reactionTime || Date.now();
     }
 
     // If within the reaction delay and close to smoke, don't react yet
@@ -278,7 +300,7 @@ function movePeople() {
       person.reactionTime &&
       Date.now() - person.reactionTime < reactionDelay
     ) {
-      person.avoiding = true; // Start avoiding after the delay
+      person.avoiding = true;
     }
   }
 }
@@ -314,8 +336,8 @@ function checkSmokeProximity() {
 }
 
 function avoidCollisions() {
-  const collisionThreshold = 80; // Minimum distance between people
-  const separationForce = 0.1; // Strength of separation force
+  const collisionThreshold = 50; // Minimum distance between people
+  const separationForce = 0.05; // Strength of separation force
 
   for (let i = 0; i < people.length; i++) {
     for (let j = i + 1; j < people.length; j++) {
@@ -360,6 +382,7 @@ function gameLoop() {
   updateSmokeParticles();
   drawSmokeParticles();
 
+  applyFireRepulsion();
   checkSmokeProximity();
   movePeople();
   avoidCollisions();
