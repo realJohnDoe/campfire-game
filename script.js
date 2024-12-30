@@ -24,11 +24,13 @@ const state = {
 // Game entities
 const people = [];
 const smokeParticles = [];
+const snowflakes = [];
 
 // Configuration
 const config = {
   numPeople: 9,
   smokeEmitInterval: 200,
+  snowflakeCount: 100,
   movement: {
     randomStrength: 0.01,
     randomMagnitude: 10,
@@ -79,6 +81,24 @@ for (let i = 0; i < config.numPeople; i++) {
     vx: 0,
     vy: 0,
   });
+}
+
+function createSnowflake() {
+  // Create snowflakes in a wider area above the screen
+  const x = Math.random() * (canvas.width + 400) - 200;
+  return {
+    x,
+    y: -20,
+    size: Math.random() * 3 + 1,
+    speed: Math.random() * 1 + 0.5,
+    wobble: Math.random() * Math.PI * 2, // Random starting phase for wobble
+    wobbleSpeed: Math.random() * 0.02 + 0.01, // How fast it wobbles side to side
+  };
+}
+
+// Initialize snowflakes
+for (let i = 0; i < config.snowflakeCount; i++) {
+  snowflakes.push(createSnowflake());
 }
 
 // Drawing functions
@@ -149,6 +169,15 @@ function drawSmokeParticles() {
   }
 }
 
+function drawSnowflakes() {
+  ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+  for (const flake of snowflakes) {
+    ctx.beginPath();
+    ctx.arc(flake.x, flake.y, flake.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 // Update functions
 function updateFlames() {
   const now = Date.now();
@@ -177,6 +206,46 @@ function updateSmokeParticles() {
     // Remove particle if it's too faint (opacity becomes too low)
     if (p.opacity <= 0) {
       smokeParticles.splice(i, 1);
+    }
+  }
+}
+
+function updateSnowflakes() {
+  const windAngle = Math.atan2(state.mouseY - centerY, state.mouseX - centerX);
+  const windStrength = 2;
+  const windRadius = 150; // How far from the fire the wind affects snowflakes
+
+  for (let i = snowflakes.length - 1; i >= 0; i--) {
+    const flake = snowflakes[i];
+
+    // Update wobble
+    flake.wobble += flake.wobbleSpeed;
+
+    // Basic downward movement
+    flake.y += flake.speed;
+
+    // Calculate distance to fire
+    const dx = flake.x - centerX;
+    const dy = flake.y - centerY;
+    const distanceToFire = Math.hypot(dx, dy);
+
+    // Calculate wind influence (0 to 1) based on distance to fire
+    const windInfluence = Math.max(0, 1 - distanceToFire / windRadius);
+
+    // Add wind effect, scaled by distance to fire
+    flake.x += Math.cos(windAngle) * windStrength * windInfluence;
+    flake.y += Math.sin(windAngle) * windStrength * 0.5 * windInfluence;
+
+    // Add wobble movement
+    flake.x += Math.sin(flake.wobble) * 0.5;
+
+    // Remove if out of bounds and create new one
+    if (
+      flake.y > canvas.height ||
+      flake.x < -100 ||
+      flake.x > canvas.width + 100
+    ) {
+      snowflakes[i] = createSnowflake();
     }
   }
 }
@@ -381,6 +450,8 @@ function gameLoop() {
   emitSmokeParticles();
   updateSmokeParticles();
   drawSmokeParticles();
+  updateSnowflakes();
+  drawSnowflakes();
 
   applyFireRepulsion();
   checkSmokeProximity();
