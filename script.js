@@ -41,7 +41,7 @@ const circleRadius = 150; // Distance from campfire
 
 // Load the sprite sheet
 const peopleSprites = new Image();
-peopleSprites.src = "people-sprites.webp";
+peopleSprites.src = "people-sprites.png";
 
 // Wait for the sprite to load before starting the game
 peopleSprites.onload = () => {
