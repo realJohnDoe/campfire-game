@@ -218,15 +218,18 @@ treeImage.onload = () => {
   // Adjust number of trees based on screen size
   const baseNumTrees = config.numTrees;
   const minScreenArea = 800 * 600; // Reference screen size
-  const actualNumTrees = Math.max(2, Math.min(
-    baseNumTrees,
-    Math.floor(baseNumTrees * Math.sqrt(availableArea / minScreenArea))
-  ));
+  const actualNumTrees = Math.max(
+    2,
+    Math.min(
+      baseNumTrees,
+      Math.floor(baseNumTrees * Math.sqrt(availableArea / minScreenArea))
+    )
+  );
 
   let attempts = 0;
   while (trees.length < actualNumTrees && attempts < maxAttempts) {
     attempts++;
-    
+
     // Generate random position within screen bounds
     const scale = 0.8 + Math.random() * 0.2;
     const treeWidth = treeImage.width * scale;
@@ -536,8 +539,17 @@ function applyFireRepulsion() {
 
 function movePeople() {
   const damping = config.movement.damping;
+  const bounceHeight = 0.5; // Height of the jump
+  const bounceSpeed = 0.5; // Speed of the bounce cycle
+  const maxSpeed = 1.0; // Maximum speed limit
 
   for (const person of people) {
+    // Initialize bounce offset if not exists
+    if (person.bounceOffset === undefined) {
+      person.bounceOffset = Math.random() * Math.PI * 2; // Random starting phase
+    }
+    person.bounceOffset += bounceSpeed;
+
     // Apply a random movement step with a larger magnitude
     const randomX =
       (Math.random() - 0.5) *
@@ -551,6 +563,10 @@ function movePeople() {
     // Apply random movement
     person.vx += randomX;
     person.vy += randomY;
+
+    // Calculate the person's speed
+    const speed = Math.hypot(person.vx, person.vy);
+    const isMovingFast = speed > 0.5; // Threshold for when to apply bounce
 
     if (person.avoiding) {
       // Move outward from the campfire (away from smoke) and rotate along the circle
@@ -580,27 +596,26 @@ function movePeople() {
       person.vy += (targetY - person.y) * 0.02;
     }
 
+    // Limit speed
+    const currentSpeed = Math.hypot(person.vx, person.vy);
+    if (currentSpeed > maxSpeed) {
+      const scale = maxSpeed / currentSpeed;
+      person.vx *= scale;
+      person.vy *= scale;
+    }
+
     // Apply velocities to update positions
     person.x += person.vx;
-    person.y += person.vy;
+    // Only apply bounce if avoiding smoke or moving fast (during collision avoidance)
+    const bounceEffect =
+      person.avoiding || isMovingFast
+        ? Math.sin(person.bounceOffset) * bounceHeight
+        : 0;
+    person.y += person.vy + bounceEffect;
 
     // Apply damping to smooth movement
     person.vx *= damping;
     person.vy *= damping;
-
-    // Manage reaction delay if close to smoke
-    if (person.avoiding) {
-      person.reactionTime = person.reactionTime || Date.now();
-    }
-
-    // If within the reaction delay and close to smoke, don't react yet
-    if (
-      !person.avoiding &&
-      person.reactionTime &&
-      Date.now() - person.reactionTime < reactionDelay
-    ) {
-      person.avoiding = true;
-    }
   }
 }
 
